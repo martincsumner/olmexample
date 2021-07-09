@@ -1,0 +1,12 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: CatalogSource
+metadata:
+  name: custom
+  namespace: openshift-marketplace
+spec:
+  sourceType: grpc
+  image: quay.io/martin_c_sumner/foobar-operator-index:latest
+  displayName: Custom Catalog
+  updateStrategy:
+    registryPoll:
+      interval: 5m

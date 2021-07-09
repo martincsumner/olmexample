@@ -1,0 +1,83 @@
+---
+
+# ansible-galaxy install fubarhouse.golang
+
+
+#- hosts: gateway
+- name: configure dev machine...
+  hosts: all
+  vars:
+#    ansible_python_interpreter: /usr/bin/python2.7
+    go_version: 1.15
+    GOPATH: /home/vagrant/go
+    GOROOT: /usr/local/go
+    GOROOT_BOOTSTRAP: /home/vagrant/go1.15
+    GOPROXY: https://proxy.golang.org
+    golang_shell_profile: /home/vagrant/.bash_profile
+    mode_workspace: 0755
+    mode_codebase: 0755
+    remote_user: vagrant
+
+
+
+  #become: yes
+
+  pre_tasks:
+
+
+  - name: update the machine...
+    yum:
+      name: '*'
+      state: latest
+
+  - name: install git
+    yum: name='git' state=present
+  #  - name: installing selinux python bindings.
+  #    dnf: name='libselinux-python' state=present
+
+
+  - name: install unzip
+    yum:
+      name='unzip'
+      state=latest
+
+  - name: install tar
+    yum: name='tar' state=latest
+
+  roles:
+  #  - fubarhouse.golang
+
+
+  tasks:
+
+
+  - name: install curl
+    yum: name='curl' state=present
+
+  - name: install podman
+    yum: name='podman' state=present
+
+  - name: install buildah
+    yum: name='buildah' state=present
+
+
+  - name: install opm binary...
+    get_url:
+      url=https://github.com/operator-framework/operator-registry/releases/download/v1.17.4/linux-amd64-opm
+      dest=/usr/local/sbin/opm
+
+
+  - name: change ownership on the opm tool...
+    file:
+      path: /usr/local/sbin/opm
+      owner: vagrant
+      group: vagrant
+      mode: 0776
+
+  - name: change ownership on the working directory...
+    file:
+      path: /vagrant
+      owner: vagrant
+      group: vagrant
+      mode: 0776
+      recurse: yes

@@ -1,0 +1,101 @@
+
+
+
+podman clear down all images...
+podman system prune --all --force && podman rmi --all
+
+
+
+
+export quay_username=martin_c_sumner
+echo $quay_username
+
+podman login -u="martin_c_sumner" -p="secretpassword" quay.io
+
+
+
+**************************************************************************
+          I have changed the versioning schema from the original...
+***********************************************************************
+        - you must update the clusterserviceversion.yaml...
+**********************************************************************
+
+
+  ie. in two places:
+
+
+    (line 62)   name: foobar-operator.0.0.1
+    this name must match the name of the pushed bundle image!!
+
+
+    (last line)  version: 0.0.1
+
+*************************************************************************
+
+
+
+podman build -f bundle.Dockerfile -t quay.io/$quay_username/foobar-operator:0.0.1 .
+
+podman push quay.io/$quay_username/foobar-operator:0.0.1
+
+
+
+opm index add  -u podman -p podman --bundles quay.io/$quay_username/foobar-operator:0.0.1 --tag quay.io/$quay_username/foobar-operator-index:0.0.1
+
+podman push quay.io/$quay_username/foobar-operator-index:0.0.1
+
+podman tag  quay.io/$quay_username/foobar-operator-index:0.0.1 quay.io/martin_c_sumner/foobar-operator-index:latest
+
+podman push quay.io/$quay_username/foobar-operator-index:latest
+
+
+oc apply -f CatalogSource.yaml
+
+
+in the - openshift-marketplace ns.
+oc apply -f subscription.yaml
+
+//now we can install the operator to a namespace...
+
+
+? didn't work...
+oc logs custom-qjqfd   -n openshift-marketplace
+
+oc logs -f foobar-operator-controller-manager-7b5988c645-vhsbb -n openshift-operators
+
+
+**************************************************************************
+          now we create the version 2 of the operator...
+***********************************************************************
+        - you must update the clusterserviceversion.yaml...
+**********************************************************************
+
+  ie. in two places:
+
+
+    (line 62)   name: foobar-operator.0.0.2
+    this name must match the name of the pushed bundle image!!
+
+
+    (last line)  version: 0.0.2
+
+
+ *************************************************************************
+
+podman build -f bundle.Dockerfile -t quay.io/$quay_username/foobar-operator:0.0.2 .
+
+podman push quay.io/$quay_username/foobar-operator:0.0.2
+
+opm index add -u podman -p podman \
+    --bundles quay.io/$quay_username/foobar-operator:0.0.2  \
+    --from-index quay.io/$quay_username/foobar-operator-index:0.0.1 \
+    --tag quay.io/$quay_username/foobar-operator-index:0.0.2
+
+podman push quay.io/$quay_username/foobar-operator-index:0.0.2
+
+podman tag  quay.io/$quay_username/foobar-operator-index:0.0.2 quay.io/martin_c_sumner/foobar-operator-index:latest
+
+
+podman push quay.io/$quay_username/foobar-operator-index:latest
+
+*********************************************************************************
